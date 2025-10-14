@@ -1,0 +1,32 @@
+import { Boot } from "./scenes/Boot";
+import { GameOver } from "./scenes/GameOver";
+import { MuseRunnerGame } from "./scenes/MuseRunnerGame";
+import { MainMenu } from "./scenes/MainMenu";
+import * as Phaser from "phaser";
+import { AUTO, Game } from "phaser";
+import { Preloader } from "./scenes/Preloader";
+//  Muse Runner - Rhythm Platformer Game Configuration
+const config = {
+  type: AUTO,
+  parent: "game-container",
+  backgroundColor: "#2c3e50",
+  physics: {
+    default: "arcade",
+    arcade: {
+      gravity: { x: 0, y: 600 },
+      debug: false,
+    },
+  },
+  scale: {
+    mode: Phaser.Scale.RESIZE,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 1024,
+    height: 768,
+  },
+  scene: [Boot, Preloader, MainMenu, MuseRunnerGame, GameOver],
+};
+const StartGame = (parent) => {
+  return new Game({ ...config, parent });
+};
+export default StartGame;
+//# sourceMappingURL=main.js.map
