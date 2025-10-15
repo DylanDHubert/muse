@@ -26,8 +26,11 @@ export class MuseRunnerGame extends Scene {
   private floatingPoints: Phaser.GameObjects.Text[] = [];
   private floatingPointsFrameCount: number = 0;
   
-  // CHORD DISPLAY BOX
-  private chordDisplayBox!: Phaser.GameObjects.Rectangle;
+  // CHORD DETECTION TRACKING
+  private lastDetectedChord: string | null = null;
+  
+  // MATHEMATICAL VISUAL BOX
+  private mathVisualBox!: Phaser.GameObjects.Rectangle;
   private chordDisplayText!: Phaser.GameObjects.Text;
   private chordProgressBar!: Phaser.GameObjects.Rectangle;
   
@@ -106,11 +109,8 @@ export class MuseRunnerGame extends Scene {
     });
     this.synthDisplay.setScrollFactor(0); // Don't scroll with camera
 
-    // CREATE CHORD DISPLAY BOX AT BOTTOM
-    this.createChordDisplayBox();
-    
-    // CREATE VISIBLE GROUND
-    this.createGroundVisual();
+    // CREATE MATHEMATICAL VISUAL BOX AT BOTTOM
+    this.createMathVisualBox();
 
     // REMOVED: Instructions and key guide UI elements
 
@@ -216,6 +216,12 @@ export class MuseRunnerGame extends Scene {
 
       // Update chord detection
       const chordResult = this.chordDetector.update(inputState.pressedKeys);
+      
+      // RESET CHORD TRACKING IF NO CHORD DETECTED
+      if (!chordResult.chordName) {
+        this.lastDetectedChord = null;
+      }
+      
       if (chordResult.points > 0) {
         this.score += chordResult.points;
         this.scoreText.setText(`Score: ${Math.floor(this.score)}`);
@@ -226,12 +232,13 @@ export class MuseRunnerGame extends Scene {
           this.showFloatingPoints(currentChord.accumulatedPoints, this.cameras.main.width / 2, this.cameras.main.height / 2);
         }
         
-        // UPDATE CHORD DISPLAY BOX
-        this.updateChordDisplayBox(chordResult.chordName, chordResult.points);
+        // UPDATE MATH VISUAL BOX
+        this.updateMathVisualBox(chordResult.chordName, chordResult.points);
         
-        // Show chord name and points if detected (only show when points are earned)
-        if (chordResult.chordName && chordResult.points > 0) {
-          this.showChordName(chordResult.chordName, chordResult.points);
+        // SHOW CHORD NAME AS FLOATING TEXT WHEN FIRST DETECTED
+        if (chordResult.chordName && chordResult.chordName !== this.lastDetectedChord) {
+          this.showChordNameFloating(chordResult.chordName);
+          this.lastDetectedChord = chordResult.chordName;
         }
       }
     } catch (error) {
@@ -563,26 +570,26 @@ export class MuseRunnerGame extends Scene {
     });
   }
 
-  private createChordDisplayBox(): void {
+  private createMathVisualBox(): void {
     const { width, height } = this.cameras.main;
     
-    // CREATE BACKGROUND BOX
-    this.chordDisplayBox = this.add.rectangle(
+    // CREATE MATHEMATICAL VISUAL BOX (FULLY OPAQUE)
+    this.mathVisualBox = this.add.rectangle(
       width / 2,
       height - 60,
       width - 40,
       80,
       0x2c3e50,
-      0.9
+      1.0 // FULLY OPAQUE
     );
-    this.chordDisplayBox.setScrollFactor(0);
-    this.chordDisplayBox.setStrokeStyle(2, 0x3498db);
+    this.mathVisualBox.setScrollFactor(0);
+    this.mathVisualBox.setStrokeStyle(2, 0x3498db);
     
-    // CREATE CHORD TEXT
+    // CREATE CHORD TEXT (HIDDEN - MATH BOX IS PURELY VISUAL)
     this.chordDisplayText = this.add.text(
       width / 2,
       height - 80,
-      "No chord active",
+      "",
       {
         fontSize: "20px",
         color: "#ecf0f1",
@@ -593,6 +600,7 @@ export class MuseRunnerGame extends Scene {
     );
     this.chordDisplayText.setOrigin(0.5);
     this.chordDisplayText.setScrollFactor(0);
+    this.chordDisplayText.setVisible(false); // HIDDEN
     
     // CREATE PROGRESS BAR BACKGROUND
     const progressBg = this.add.rectangle(
@@ -619,47 +627,6 @@ export class MuseRunnerGame extends Scene {
     this.createMathBackground();
   }
 
-  private createGroundVisual(): void {
-    const { width, height } = this.cameras.main;
-    
-    // CREATE GROUND VISUAL (BELOW ALL NOTES)
-    this.groundVisual = this.add.rectangle(
-      width / 2,
-      height - 20, // SAME AS GROUND Y LEVEL
-      width,
-      20, // THICK GROUND LINE
-      0x8B4513, // BROWN GROUND COLOR
-      0.8
-    );
-    this.groundVisual.setScrollFactor(0); // DON'T SCROLL WITH CAMERA
-    this.groundVisual.setStrokeStyle(2, 0x654321); // DARKER BROWN BORDER
-    
-    // ADD GROUND TEXTURE EFFECT
-    const groundTexture = this.add.rectangle(
-      width / 2,
-      height - 20,
-      width,
-      20,
-      0x654321, // DARKER BROWN
-      0.3
-    );
-    groundTexture.setScrollFactor(0);
-    
-    // ADD GROUND LABEL
-    const groundLabel = this.add.text(
-      20,
-      height - 30,
-      "GROUND",
-      {
-        fontSize: "14px",
-        color: "#8B4513",
-        fontFamily: "Nabla, system-ui",
-        stroke: "#000000",
-        strokeThickness: 1,
-      }
-    );
-    groundLabel.setScrollFactor(0);
-  }
 
   private createPlatformParticles(key: string, x: number): void {
     const { height } = this.cameras.main;
@@ -723,44 +690,37 @@ export class MuseRunnerGame extends Scene {
     }
   }
 
-  private updateChordDisplayBox(chordName: string | null, points: number): void {
-    if (!chordName) {
-      // NO CHORD ACTIVE
-      this.chordDisplayText.setText("No chord active");
-      this.chordDisplayText.setColor("#95a5a6");
-      this.chordProgressBar.setScaleX(0);
-      return;
-    }
+  private updateMathVisualBox(chordName: string | null, points: number): void {
+    // MATH BOX IS PURELY MATHEMATICAL BACKGROUND - NO PROGRESS BAR OR TEXT
+    // The mathematical background updates automatically in updateMathBackground()
+  }
 
-    // UPDATE CHORD TEXT
-    const currentChord = this.chordDetector.getCurrentChord();
-    if (currentChord) {
-      const progress = currentChord.accumulatedPoints / currentChord.basePoints;
-      this.chordDisplayText.setText(`${chordName} (${Math.floor(progress * 100)}%)`);
-      
-      // COLOR BASED ON PROGRESS
-      if (progress >= 1) {
-        this.chordDisplayText.setColor("#f39c12"); // ORANGE FOR COMPLETE
-      } else if (progress >= 0.5) {
-        this.chordDisplayText.setColor("#2ecc71"); // GREEN FOR HALF
-      } else {
-        this.chordDisplayText.setColor("#3498db"); // BLUE FOR STARTING
+  private showChordNameFloating(chordName: string): void {
+    // Create floating chord name text - position relative to camera viewport
+    const chordText = this.add.text(
+      this.cameras.main.width / 2,
+      this.cameras.main.height / 2 - 50, // ABOVE THE POINTS
+      chordName,
+      {
+        fontSize: "28px",
+        color: "#f39c12",
+        fontFamily: "Nabla, system-ui",
+        stroke: "#000000",
+        strokeThickness: 2,
       }
-      
-      // UPDATE PROGRESS BAR
-      const { width } = this.cameras.main;
-      const barWidth = (width - 60) * progress;
-      this.chordProgressBar.setScaleX(barWidth / (width - 60));
-      
-      // PROGRESS BAR COLOR
-      if (progress >= 1) {
-        this.chordProgressBar.setFillStyle(0xf39c12); // ORANGE
-      } else if (progress >= 0.5) {
-        this.chordProgressBar.setFillStyle(0x2ecc71); // GREEN
-      } else {
-        this.chordProgressBar.setFillStyle(0x3498db); // BLUE
-      }
-    }
+    );
+    chordText.setOrigin(0.5);
+    chordText.setScrollFactor(0);
+
+    // Animate the chord name floating up
+    this.tweens.add({
+      targets: chordText,
+      y: chordText.y - 80,
+      alpha: 0,
+      duration: 3000,
+      ease: "Power2",
+      onComplete: () => chordText.destroy(),
+    });
   }
 
   private showChordName(chordName: string, points: number): void {
@@ -891,7 +851,7 @@ export class MuseRunnerGame extends Scene {
     // CREATE GRAPHICS OBJECT FOR MATHEMATICAL BACKGROUND
     this.mathBackground = this.add.graphics();
     this.mathBackground.setScrollFactor(0);
-    this.mathBackground.setDepth(-1); // BEHIND CHORD BOX BUT ABOVE GAME BACKGROUND
+    this.mathBackground.setDepth(1); // ABOVE THE MATH BOX
     
     // INITIALIZE BACKGROUND DATA ARRAY
     const boxWidth = width - 40;
