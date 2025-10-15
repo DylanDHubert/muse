@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import * as Phaser from "phaser";
 import { GAME_CONSTANTS, GameKey } from "../config/GameConstants";
 
 export interface IInputManager {
@@ -12,6 +13,7 @@ export class InputManager implements IInputManager {
   private currentlyPressedKeys: Set<string> = new Set();
   private previouslyPressedKeys: Set<string> = new Set();
   private isInitialized: boolean = false;
+  private keyObjects: Map<string, Phaser.Input.Keyboard.Key> = new Map();
 
   constructor(scene: Scene) {
     this.scene = scene;
@@ -23,8 +25,13 @@ export class InputManager implements IInputManager {
       return;
     }
 
+    // Create key objects once during initialization
+    GAME_CONSTANTS.VALID_KEYS.forEach((key) => {
+      this.keyObjects.set(key, this.scene.input.keyboard!.addKey(key));
+    });
+
     this.isInitialized = true;
-    console.log("InputManager initialized successfully");
+    // InputManager initialized successfully
   }
 
   update(_currentTime: number): { keyStateChanged: boolean } {
@@ -38,10 +45,10 @@ export class InputManager implements IInputManager {
     // Clear current state
     this.currentlyPressedKeys.clear();
 
-    // Check each valid game key
+    // Check each valid game key using pre-created key objects
     GAME_CONSTANTS.VALID_KEYS.forEach((key) => {
-      const keyObject = this.scene.input.keyboard!.addKey(key);
-      if (keyObject.isDown) {
+      const keyObject = this.keyObjects.get(key);
+      if (keyObject && keyObject.isDown) {
         this.currentlyPressedKeys.add(key);
       }
     });

@@ -19,8 +19,9 @@ export const GAME_CONSTANTS = {
     HEIGHT: 20,
     EXTENSION_DISTANCE: 150,
     AHEAD_OFFSET: 20,
-    CENTER_OFFSET: 80,
     CLEANUP_DISTANCE: 400,
+    MIN_LENGTH: 20, // Minimum platform length for quick taps
+    GROWTH_RATE: 100, // Pixels per second growth rate (matches character speed)
   },
 
   // Audio configuration
@@ -37,6 +38,16 @@ export const GAME_CONSTANTS = {
     GROUND_OFFSET: 60,
     CHARACTER_HEIGHT_LERP_SPEED: 0.08,
     FALL_VELOCITY: 300,
+    CAMERA_DEADZONE_X: 200,
+    CAMERA_DEADZONE_Y: 100,
+    CAMERA_FOLLOW_LERP_X: 0.1,
+    CAMERA_FOLLOW_LERP_Y: 0.1,
+  },
+  CHORD_DETECTION: {
+    ACCUMULATION_TIME: 1000, // ms
+    TRIAD_POINTS: 50,
+    SEVENTH_POINTS: 100,
+    POWER_CHORD_POINTS: 25,
   },
 
   // Level heights for each key (relative to camera height)
@@ -63,4 +74,16 @@ export const GAME_CONSTANTS = {
 
   // Valid game keys
   VALID_KEYS: ["S", "D", "F", "G", "H", "J", "K"] as readonly GameKey[],
+
+  // Error handling
+  ERROR_HANDLING: {
+    MANAGER_INIT_FAILED: "Failed to initialize managers",
+    INPUT_HANDLING_ERROR: "Input handling error",
+    PLATFORM_EXTENSION_ERROR: "Platform extension error",
+    CHARACTER_HEIGHT_ERROR: "Character height update error",
+    PLATFORM_CLEANUP_ERROR: "Platform cleanup error",
+    KEY_CHANGE_ERROR: "Key change handling error",
+    PLATFORM_START_ERROR: "Failed to start platform",
+    PLATFORM_END_ERROR: "Failed to end platform",
+  },
 } as const;

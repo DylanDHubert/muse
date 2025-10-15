@@ -6,6 +6,8 @@ interface PlatformData {
   rectangle: Phaser.GameObjects.Rectangle;
   startX: number;
   key: GameKey;
+  startTime: number;
+  isGrowing: boolean;
 }
 
 export interface IPlatformManager {
@@ -33,7 +35,7 @@ export class PlatformManager implements IPlatformManager {
 
   initialize(): void {
     this.isInitialized = true;
-    console.log("PlatformManager initialized successfully");
+    // PlatformManager initialized successfully
   }
 
   startNewPlatform(key: GameKey, startX: number): void {
@@ -51,13 +53,11 @@ export class PlatformManager implements IPlatformManager {
     const platformY = height + GAME_CONSTANTS.LEVEL_HEIGHTS[key];
     const platformColor = GAME_CONSTANTS.LEVEL_COLORS[key];
 
-    // Create platform rectangle
+    // Create platform rectangle - start with minimum length
     const platform = this.scene.add.rectangle(
-      startX +
-        GAME_CONSTANTS.PLATFORMS.AHEAD_OFFSET +
-        GAME_CONSTANTS.PLATFORMS.CENTER_OFFSET,
+      startX + GAME_CONSTANTS.PLATFORMS.AHEAD_OFFSET,
       platformY,
-      GAME_CONSTANTS.PLATFORMS.WIDTH,
+      GAME_CONSTANTS.PLATFORMS.MIN_LENGTH,
       GAME_CONSTANTS.PLATFORMS.HEIGHT,
       platformColor,
     );
@@ -70,12 +70,14 @@ export class PlatformManager implements IPlatformManager {
       rectangle: platform,
       startX: startX,
       key: key,
+      startTime: this.scene.time.now,
+      isGrowing: true,
     };
 
     this.activePlatforms.set(key, platformData);
     this.platformsGroup.add(platform);
 
-    console.log(`Created platform for key ${key} at height ${platformY}`);
+    // Platform created for key at specified height
   }
 
   endPlatform(key: GameKey): void {
@@ -84,26 +86,35 @@ export class PlatformManager implements IPlatformManager {
       return;
     }
 
+    // Stop growing the platform
+    platformData.isGrowing = false;
+    
     // Remove from active platforms but keep the visual platform
     this.activePlatforms.delete(key);
-    console.log(`Ended platform for key ${key}`);
+    // Platform ended for key
   }
 
   extendActivePlatforms(characterX: number): void {
     this.activePlatforms.forEach((platformData, _key) => {
+      if (!platformData.isGrowing) return;
+      
       const platform = platformData.rectangle;
-      const targetRightEdge =
-        characterX + GAME_CONSTANTS.PLATFORMS.EXTENSION_DISTANCE;
-      const currentRightEdge = platform.x + platform.width / 2;
-
-      if (targetRightEdge > currentRightEdge) {
-        // Extend platform by increasing width and adjusting position
-        const newWidth = targetRightEdge - (platform.x - platform.width / 2);
-        const newCenterX = platform.x - platform.width / 2 + newWidth / 2;
-
-        platform.setSize(newWidth, platform.height);
-        platform.setPosition(newCenterX, platform.y);
-      }
+      
+      // Calculate how far the character has moved since platform creation
+      const distanceMoved = characterX - platformData.startX;
+      
+      // Platform should extend to keep up with character movement
+      const newWidth = Math.max(
+        GAME_CONSTANTS.PLATFORMS.MIN_LENGTH,
+        GAME_CONSTANTS.PLATFORMS.MIN_LENGTH + distanceMoved
+      );
+      
+      // Update platform size and position
+      const leftEdge = platform.x - platform.width / 2;
+      const newCenterX = leftEdge + newWidth / 2;
+      
+      platform.setSize(newWidth, platform.height);
+      platform.setPosition(newCenterX, platform.y);
     });
   }
 
@@ -154,9 +165,7 @@ export class PlatformManager implements IPlatformManager {
       platform.destroy();
     });
 
-    if (platformsToRemove.length > 0) {
-      console.log(`Cleaned up ${platformsToRemove.length} old platforms`);
-    }
+    // Old platforms cleaned up
   }
 
   getActivePlatforms(): Map<string, PlatformData> {

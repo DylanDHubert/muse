@@ -30,7 +30,7 @@ export class AudioManager implements IAudioManager {
           .webkitAudioContext)();
       this.audioAvailable = true;
       this.isInitialized = true;
-      console.log("AudioManager initialized successfully");
+      // AudioManager initialized successfully
     } catch (error) {
       console.warn("Web Audio API not available:", error);
       this.audioAvailable = false;

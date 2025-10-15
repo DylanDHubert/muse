@@ -1,17 +1,2 @@
-export type InitResponse = {
-  type: "init";
-  postId: string;
-  count: number;
-};
-
-export type IncrementResponse = {
-  type: "increment";
-  postId: string;
-  count: number;
-};
-
-export type DecrementResponse = {
-  type: "decrement";
-  postId: string;
-  count: number;
-};
+// API types for Muse Runner game
+// Currently no specific API types needed for the rhythm game

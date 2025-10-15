@@ -53,7 +53,7 @@ export class MainMenu extends Scene {
         .text(0, 0, "🎵 Muse Runner 🏃‍♂️", {
           fontSize: "48px",
           color: "#ffffff",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Nabla, system-ui",
         })
         .setOrigin(0.5);
     }
@@ -66,7 +66,7 @@ export class MainMenu extends Scene {
         .text(0, 0, "Rhythm Platformer", {
           fontSize: "24px",
           color: "#3498db",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Nabla, system-ui",
         })
         .setOrigin(0.5);
     }
@@ -83,7 +83,7 @@ export class MainMenu extends Scene {
           {
             fontSize: "18px",
             color: "#ecf0f1",
-            fontFamily: "Arial, sans-serif",
+            fontFamily: "Nabla, system-ui",
             align: "center",
           },
         )
@@ -98,7 +98,7 @@ export class MainMenu extends Scene {
         .text(0, 0, "Click to Start or Press SPACE", {
           fontSize: "24px",
           color: "#2ecc71",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Nabla, system-ui",
         })
         .setOrigin(0.5);
 
@@ -124,7 +124,7 @@ export class MainMenu extends Scene {
           {
             fontSize: "14px",
             color: "#95a5a6",
-            fontFamily: "Arial, sans-serif",
+            fontFamily: "Nabla, system-ui",
           },
         )
         .setOrigin(0.5);

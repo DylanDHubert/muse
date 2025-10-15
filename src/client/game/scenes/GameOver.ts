@@ -4,7 +4,7 @@ import * as Phaser from "phaser";
 export class GameOver extends Scene {
   camera: Phaser.Cameras.Scene2D.Camera;
   background: Phaser.GameObjects.Image;
-  gameover_text: Phaser.GameObjects.Text;
+  gameOverText: Phaser.GameObjects.Text;
 
   constructor() {
     super("GameOver");
@@ -22,7 +22,7 @@ export class GameOver extends Scene {
       .setAlpha(0.5);
 
     // "Game Over" text – created once and scaled responsively
-    this.gameover_text = this.add
+    this.gameOverText = this.add
       .text(0, 0, "Game Over", {
         fontFamily: "Arial Black",
         fontSize: "64px",
@@ -61,9 +61,9 @@ export class GameOver extends Scene {
     const scaleFactor = Math.min(Math.min(width / 1024, height / 768), 1);
 
     // Centre and scale the game-over text
-    if (this.gameover_text) {
-      this.gameover_text.setPosition(width / 2, height / 2);
-      this.gameover_text.setScale(scaleFactor);
+    if (this.gameOverText) {
+      this.gameOverText.setPosition(width / 2, height / 2);
+      this.gameOverText.setScale(scaleFactor);
     }
   }
 }
