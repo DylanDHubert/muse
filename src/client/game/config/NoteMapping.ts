@@ -8,6 +8,15 @@ export const NOTE_MAPPING = {
   H: "G",  // G (5th)
   J: "A",  // A (6th)
   K: "B",  // B (7th)
+  // Chromatic notes
+  R: "D#", // D# (Sharp 2nd)
+  U: "G#", // G# (Sharp 5th)
+  I: "Bb", // Bb (Flat 7th)
+  // Additional octave keys (same note names for chord detection)
+  A: "B",  // B (same as K for chord detection)
+  L: "C",  // C (same as S for chord detection)
+  ";": "D", // D (same as D for chord detection)
+  "'": "E", // E (same as F for chord detection)
 } as const;
 
 // Reverse mapping - Musical note -> Keyboard key
@@ -19,6 +28,10 @@ export const KEY_MAPPING = {
   G: "H",
   A: "J",
   B: "K",
+  // Chromatic notes
+  "D#": "R",
+  "G#": "U",
+  "Bb": "I",
 } as const;
 
 // ALL COMMON CHORDS IN THE C MAJOR KEY (NOTES SORTED ALPHABETICALLY)
@@ -58,16 +71,12 @@ export const CHORD_DEFINITIONS = {
     // ----------------------------
     "C,F,G": { name: "Csus4", points: 50 },
     "C,D,G": { name: "Csus2", points: 50 },
-    "C,D,G": { name: "Gsus4", points: 50 },
     "A,D,G": { name: "Dsus4", points: 50 },
   
     // ----------------------------
     // ADD CHORDS - 75 POINTS
     // ----------------------------
-    "A,C,E,G": { name: "Cadd6", points: 75 },
     "C,D,E,G": { name: "Cadd9", points: 75 },
-    "A,C,D,F": { name: "Fadd9", points: 75 },
-    "B,D,E,G": { name: "Gadd9", points: 75 },
   
     // ----------------------------
     // POWER CHORDS (5ths) - 25 POINTS
@@ -86,55 +95,41 @@ export const CHORD_DEFINITIONS_EXTENDED = {
     // ----------------------------
     // CHROMATIC TRIADS - 50 POINTS
     // ----------------------------
-    "A,C,D#": { name: "A Diminished", points: 50 },
-    "A,C#,E": { name: "A Major (borrowed from A Mixolydian)", points: 50 },
-    "A,D,F#": { name: "D Major (secondary dominant of G)", points: 50 },
-    "A#,C#,E": { name: "A# Diminished", points: 50 },
-    "A#,D,F": { name: "Bb Major (bVII — borrowed from Mixolydian)", points: 50 },
-    "A#,D,F,A": { name: "Bb Major 7", points: 100 },
-    "A#,D,F#": { name: "D Major (secondary dominant of G)", points: 50 },
-    "A#,F,G#": { name: "F Augmented (enharmonic)", points: 50 },
-    "A#,F,C": { name: "F Minor (borrowed from parallel minor)", points: 50 },
-    "A#,G,D": { name: "G Minor (borrowed from C minor)", points: 50 },
-    "B,D#,F#": { name: "B Major (V/vi)", points: 50 },
-    "B,D#,F#,A": { name: "B7 (secondary dominant of Em)", points: 100 },
-    "B,D#,G#": { name: "G# Minor", points: 50 },
-    "B,D#,G#,F#": { name: "G# Minor 7", points: 100 },
-    "C,D#,G": { name: "C Minor", points: 50 },
-    "C,D#,G,A#": { name: "C Minor 7 (borrowed from C minor)", points: 100 },
-    "C,E,G#": { name: "C Augmented", points: 50 },
-    "C,E,G#,B": { name: "C Augmented Major 7", points: 100 },
-    "C#,E,G#": { name: "C# Diminished", points: 50 },
-    "C#,F,G#": { name: "C# Minor", points: 50 },
-    "C#,F,G#,B": { name: "C# Minor 7", points: 100 },
-    "D,F,G#": { name: "D Augmented", points: 50 },
-    "D,F,A#": { name: "D Minor (borrowed flat 6)", points: 50 },
-    "D#,G,A#": { name: "D# Minor (Eb Minor)", points: 50 },
-    "D#,G,B": { name: "D# Diminished", points: 50 },
-    "E,G#,B": { name: "E Major (V/vi)", points: 50 },
-    "E,G#,B,D": { name: "E7 (secondary dominant of Am)", points: 100 },
-    "F,G#,C": { name: "F Augmented", points: 50 },
-    "F#,A#,C#": { name: "F# Diminished", points: 50 },
-    "F#,A#,C#,E": { name: "F# Diminished 7", points: 100 },
-    "G,A#,D": { name: "G Minor (borrowed from C minor)", points: 50 },
-    "G,B,D#": { name: "G Augmented", points: 50 },
-    "G#,B,D#": { name: "G# Minor", points: 50 },
-    "G#,B,D#,F#": { name: "G# Minor 7", points: 100 },
-    "G#,C,D#": { name: "G# Major (Ab Major enharmonic)", points: 50 },
-  
-    // ----------------------------
-    // SUS / ADD CHORDS - 75 POINTS
-    // ----------------------------
+    "A,C,D#": { name: "A Diminished (viio/iii)", points: 50 },
+    "A,C#,E": { name: "A Major (V/ii)", points: 50 },
+    "A,D,F#": { name: "D Major (V/V)", points: 50 },
+    "A#,C#,E": { name: "A# Diminished (viio/bII)", points: 50 },
+    "A#,C,D,F": { name: "F Minor (iv)", points: 50 },
+    "A#,F,G#": { name: "F Augmented (IV+)", points: 50 },
+    "A#,D,F": { name: "Bb Major (bVII)", points: 50 },
+    "A#,D,G": { name: "G Minor (v)", points: 50 },
+    "A#,D,G#": { name: "Ab Major (bVI)", points: 50 },
+    "B,D#,G#": { name: "G# Minor (iii/vi)", points: 50 },
+    "C,D#,G": { name: "C Minor (i)", points: 50 },
+    "A#,C,D#,G": { name: "C Minor 7 (i7)", points: 100 },
+    "C,E,G#": { name: "C Augmented (I+)", points: 50 },
+    "B,C,E,G#": { name: "C Augmented Major 7 (I+Δ7)", points: 100 },
+    "C#,E,G#": { name: "C# Diminished (viio/ii)", points: 50 },
+    "C#,F,G#": { name: "C# Minor (ii/ii)", points: 50 },
+    "B,C#,F,G#": { name: "C# Minor 7 (ii7/ii)", points: 100 },
+    "D,F,G#": { name: "D Augmented (II+)", points: 50 },
+    "A#,D#,G": { name: "Eb Minor (biii)", points: 50 },
+    "B,D#,G": { name: "D# Diminished", points: 50 },
+    "B,E,G#": { name: "E Major (III)", points: 50 },
+    "B,D,E,G#": { name: "E Dominant 7 (V7/vi)", points: 100 },
+    "C,F,G#": { name: "F Augmented (IV+)", points: 50 },
+    "A#,C,F": { name: "F Minor (iv)", points: 50 },
+    "A#,C,F,G#": { name: "F Augmented (IV+)", points: 50 },
 
-    "F,A#,C": { name: "F Minor (borrowed)", points: 75 },
   
     // ----------------------------
     // POWER CHORDS (5ths) - 25 POINTS
     // ----------------------------
-    "A#,F": { name: "Bb5", points: 25 },
-    "D#,A#": { name: "Eb5", points: 25 },
-    "G#,D#": { name: "Ab5", points: 25 },
+    "A#,F": { name: "Bb5 (bVII5)", points: 25 },
+    "A#,D#": { name: "Eb5 (bIII5)", points: 25 },
+    "D#,G#": { name: "Ab5 (bVI5)", points: 25 },
   } as const;
+  
   
 
 // Helper functions
@@ -149,7 +144,28 @@ export function notesToKeys(notes: string[]): string[] {
 export function getChordFromNotes(notes: string[]): { name: string; points: number } | null {
   const sortedNotes = [...notes].sort();
   const noteString = sortedNotes.join(",");
-  return CHORD_DEFINITIONS[noteString as keyof typeof CHORD_DEFINITIONS] || null;
+  
+  // Debug: Log what we're looking for
+  console.log("Looking for chord:", noteString);
+  console.log("Available main chords:", Object.keys(CHORD_DEFINITIONS).length);
+  console.log("Available extended chords:", Object.keys(CHORD_DEFINITIONS_EXTENDED).length);
+  
+  // Check main chord definitions first
+  const mainChord = CHORD_DEFINITIONS[noteString as keyof typeof CHORD_DEFINITIONS];
+  if (mainChord) {
+    console.log("✅ Found in main chords:", mainChord.name);
+    return mainChord;
+  }
+  
+  // Check extended chord definitions
+  const extendedChord = CHORD_DEFINITIONS_EXTENDED[noteString as keyof typeof CHORD_DEFINITIONS_EXTENDED];
+  if (extendedChord) {
+    console.log("✅ Found in extended chords:", extendedChord.name);
+    return extendedChord;
+  }
+  
+  console.log("❌ No chord found for:", noteString);
+  return null;
 }
 
 export function getChordFromKeys(keys: string[]): { name: string; points: number } | null {

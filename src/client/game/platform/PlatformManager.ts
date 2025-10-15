@@ -8,6 +8,10 @@ interface PlatformData {
   key: GameKey;
   startTime: number;
   isGrowing: boolean;
+  // VISUAL EFFECTS
+  glowEffect?: Phaser.GameObjects.Rectangle;
+  noteSymbol?: Phaser.GameObjects.Text;
+  pulseTween?: Phaser.Tweens.Tween;
 }
 
 export interface IPlatformManager {
@@ -53,7 +57,18 @@ export class PlatformManager implements IPlatformManager {
     const platformY = height + GAME_CONSTANTS.LEVEL_HEIGHTS[key];
     const platformColor = GAME_CONSTANTS.LEVEL_COLORS[key];
 
-    // Create platform rectangle - start with minimum length
+    // CREATE GLOW EFFECT (BEHIND PLATFORM)
+    const glowEffect = this.scene.add.rectangle(
+      startX + GAME_CONSTANTS.PLATFORMS.AHEAD_OFFSET,
+      platformY,
+      GAME_CONSTANTS.PLATFORMS.MIN_LENGTH + 20, // SLIGHTLY LARGER
+      GAME_CONSTANTS.PLATFORMS.HEIGHT + 10, // SLIGHTLY TALLER
+      platformColor,
+      0.3 // TRANSPARENT
+    );
+    glowEffect.setStrokeStyle(3, platformColor, 0.6);
+
+    // CREATE MAIN PLATFORM WITH GRADIENT EFFECT
     const platform = this.scene.add.rectangle(
       startX + GAME_CONSTANTS.PLATFORMS.AHEAD_OFFSET,
       platformY,
@@ -61,9 +76,45 @@ export class PlatformManager implements IPlatformManager {
       GAME_CONSTANTS.PLATFORMS.HEIGHT,
       platformColor,
     );
+    
+    // ADD GRADIENT OVERLAY
+    const gradientOverlay = this.scene.add.rectangle(
+      startX + GAME_CONSTANTS.PLATFORMS.AHEAD_OFFSET,
+      platformY - 2, // SLIGHTLY ABOVE
+      GAME_CONSTANTS.PLATFORMS.MIN_LENGTH,
+      GAME_CONSTANTS.PLATFORMS.HEIGHT / 2,
+      0xFFFFFF, // WHITE GRADIENT
+      0.2
+    );
+    
+    // ADD MUSICAL NOTE SYMBOL
+    const noteSymbol = this.scene.add.text(
+      startX + GAME_CONSTANTS.PLATFORMS.AHEAD_OFFSET,
+      platformY,
+      this.getNoteSymbol(key),
+      {
+        fontSize: "16px",
+        color: "#FFFFFF",
+        fontFamily: "Nabla, system-ui",
+        stroke: "#000000",
+        strokeThickness: 2,
+      }
+    );
+    noteSymbol.setOrigin(0.5);
 
     // Add to physics (optional, for future collision detection)
     this.scene.physics.add.existing(platform, true); // true = static body
+
+    // CREATE PULSING ANIMATION
+    const pulseTween = this.scene.tweens.add({
+      targets: [platform, glowEffect, gradientOverlay],
+      scaleX: 1.05,
+      scaleY: 1.05,
+      duration: 1000,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut"
+    });
 
     // Store platform data
     const platformData: PlatformData = {
@@ -72,12 +123,38 @@ export class PlatformManager implements IPlatformManager {
       key: key,
       startTime: this.scene.time.now,
       isGrowing: true,
+      glowEffect: glowEffect,
+      noteSymbol: noteSymbol,
+      pulseTween: pulseTween,
     };
 
     this.activePlatforms.set(key, platformData);
     this.platformsGroup.add(platform);
+    this.platformsGroup.add(glowEffect);
+    this.platformsGroup.add(gradientOverlay);
+    this.platformsGroup.add(noteSymbol);
 
     // Platform created for key at specified height
+  }
+
+  private getNoteSymbol(key: GameKey): string {
+    const noteSymbols: Record<GameKey, string> = {
+      S: "♪", // C
+      D: "♫", // D  
+      F: "♪", // E
+      G: "♫", // F
+      H: "♪", // G
+      J: "♫", // A
+      K: "♪", // B
+      R: "♯", // D#
+      U: "♯", // G#
+      I: "♭", // Bb
+      A: "♪", // B3
+      L: "♫", // C5
+      ";": "♪", // D5
+      "'": "♫", // E5
+    };
+    return noteSymbols[key] || "♪";
   }
 
   endPlatform(key: GameKey): void {
@@ -85,6 +162,19 @@ export class PlatformManager implements IPlatformManager {
     if (!platformData) {
       return;
     }
+
+    // STOP PULSING ANIMATION
+    if (platformData.pulseTween) {
+      platformData.pulseTween.stop();
+    }
+
+    // FADE OUT VISUAL EFFECTS
+    this.scene.tweens.add({
+      targets: [platformData.rectangle, platformData.glowEffect, platformData.noteSymbol],
+      alpha: 0.3,
+      duration: 500,
+      ease: "Power2"
+    });
 
     // Stop growing the platform
     platformData.isGrowing = false;
