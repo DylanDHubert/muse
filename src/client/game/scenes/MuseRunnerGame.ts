@@ -4,6 +4,7 @@ import { AudioManager } from "../audio/AudioManager";
 import { InputManager } from "../input/InputManager";
 import { PlatformManager } from "../platform/PlatformManager";
 import { ChordDetector } from "../audio/ChordDetector";
+import { SynthControlPanel } from "../ui/SynthControlPanel";
 import { GAME_CONSTANTS, GameKey } from "../config/GameConstants";
 
 export class MuseRunnerGame extends Scene {
@@ -20,7 +21,7 @@ export class MuseRunnerGame extends Scene {
   private lastScoreDecayTime: number = 0;
   
   // SYNTHESIS PARAMETER DISPLAY
-  private synthDisplay!: Phaser.GameObjects.Text;
+  private synthControlPanel!: SynthControlPanel;
   
   // FLOATING POINTS SYSTEM
   private floatingPoints: Phaser.GameObjects.Text[] = [];
@@ -100,14 +101,13 @@ export class MuseRunnerGame extends Scene {
     this.scoreText.setScrollFactor(0); // Don't scroll with camera
 
     // CREATE SYNTHESIS PARAMETER DISPLAY
-    this.synthDisplay = this.add.text(16, 50, "SYNTH CONTROLS:\n5/6 LFO Rate | 7/8 Chorus\n1/2 Delay Vol | 3/4 Reverb\n0: Waveform", {
-      fontSize: "16px",
-      color: "#ffff00",
-      fontFamily: "Nabla, system-ui",
-      stroke: "#000000",
-      strokeThickness: 1,
+    this.synthControlPanel = new SynthControlPanel(this, this.audioManager, {
+      x: 16,
+      y: 50,
+      width: 500,
+      height: 100
     });
-    this.synthDisplay.setScrollFactor(0); // Don't scroll with camera
+    this.synthControlPanel.create();
 
     // CREATE MATHEMATICAL VISUAL BOX AT BOTTOM
     this.createMathVisualBox();
@@ -151,6 +151,11 @@ export class MuseRunnerGame extends Scene {
 
     // Reset game state
     this.score = 0;
+
+    // ADD RESPONSIVE LAYOUT LISTENER
+    this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
+      this.synthControlPanel.updateLayout();
+    });
 
     // Don't start with any musical platform - wait for first key press
   }
@@ -268,18 +273,11 @@ export class MuseRunnerGame extends Scene {
   }
 
   private updateSynthesisDisplay(): void {
-    const lfoRate = this.audioManager.getLFORate();
-    const chorusDepth = this.audioManager.getChorusDepth();
-    const delayVolume = this.audioManager.getDelayVolume();
-    const reverbAmount = this.audioManager.getReverbAmount();
-    const waveform = this.audioManager.getCurrentWaveform();
+    // UPDATE SYNTH CONTROL PANEL VISUALS
+    this.synthControlPanel.update();
     
-    this.synthDisplay.setText(
-      `SYNTH CONTROLS:\n` +
-      `5/6 LFO: ${lfoRate.toFixed(1)}Hz | 7/8 Chorus: ${(chorusDepth * 100).toFixed(0)}%\n` +
-      `1/2 Delay: ${(delayVolume * 100).toFixed(0)}% | 3/4 Reverb: ${(reverbAmount * 100).toFixed(0)}%\n` +
-      `0: Waveform: ${waveform.toUpperCase()}`
-    );
+    // UPDATE RESPONSIVE LAYOUT ON SCREEN RESIZE
+    this.synthControlPanel.updateLayout();
 
     // Game over condition - only if character falls WAY off screen (make it more lenient)
     if (
@@ -573,12 +571,16 @@ export class MuseRunnerGame extends Scene {
   private createMathVisualBox(): void {
     const { width, height } = this.cameras.main;
     
+    // USE BOTTOM 30% OF SCREEN
+    const boxHeight = Math.floor(height * 0.3);
+    const boxY = height - boxHeight;
+    
     // CREATE MATHEMATICAL VISUAL BOX (FULLY OPAQUE)
     this.mathVisualBox = this.add.rectangle(
       width / 2,
-      height - 60,
-      width - 40,
-      80,
+      boxY + boxHeight / 2,
+      width,
+      boxHeight,
       0x2c3e50,
       1.0 // FULLY OPAQUE
     );
@@ -588,7 +590,7 @@ export class MuseRunnerGame extends Scene {
     // CREATE CHORD TEXT (HIDDEN - MATH BOX IS PURELY VISUAL)
     this.chordDisplayText = this.add.text(
       width / 2,
-      height - 80,
+      boxY + boxHeight / 2 - 20,
       "",
       {
         fontSize: "20px",
@@ -605,8 +607,8 @@ export class MuseRunnerGame extends Scene {
     // CREATE PROGRESS BAR BACKGROUND
     const progressBg = this.add.rectangle(
       width / 2,
-      height - 40,
-      width - 60,
+      boxY + boxHeight - 20,
+      width - 40,
       8,
       0x34495e
     );
@@ -614,8 +616,8 @@ export class MuseRunnerGame extends Scene {
     
     // CREATE PROGRESS BAR
     this.chordProgressBar = this.add.rectangle(
-      width / 2 - (width - 60) / 2,
-      height - 40,
+      width / 2 - (width - 40) / 2,
+      boxY + boxHeight - 20,
       0,
       8,
       0x2ecc71
@@ -853,11 +855,11 @@ export class MuseRunnerGame extends Scene {
     this.mathBackground.setScrollFactor(0);
     this.mathBackground.setDepth(1); // ABOVE THE MATH BOX
     
-    // INITIALIZE BACKGROUND DATA ARRAY
-    const boxWidth = width - 40;
-    const boxHeight = 80;
-    const boxX = 20;
-    const boxY = height - 100;
+    // USE BOTTOM 30% OF SCREEN
+    const boxWidth = width;
+    const boxHeight = Math.floor(height * 0.3); // 30% of screen height
+    const boxX = 0;
+    const boxY = height - boxHeight; // Start from bottom
     
     // CREATE 2D ARRAY FOR BACKGROUND VALUES
     this.backgroundData = [];
@@ -873,10 +875,10 @@ export class MuseRunnerGame extends Scene {
     if (!this.mathBackground) return;
     
     const { width, height } = this.cameras.main;
-    const boxWidth = width - 40;
-    const boxHeight = 80;
-    const boxX = 20;
-    const boxY = height - 100;
+    const boxWidth = width;
+    const boxHeight = Math.floor(height * 0.3); // 30% of screen height
+    const boxX = 0;
+    const boxY = height - boxHeight; // Start from bottom
     
     // GET AUDIO PARAMETERS
     const lfoRate = this.audioManager.getLFORate();
